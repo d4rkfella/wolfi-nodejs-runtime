@@ -32,6 +32,12 @@ jobs:
           archs: amd64
           slsa-attest: "true"
           sbom-attest: "true"
+          build-repository-append: |
+            https://packages.darkfellanetwork.com
+            https://packages.wolfi.dev/os
+          keyring-append: |
+            https://packages.darkfellanetwork.com/melange.rsa.pub
+            https://packages.wolfi.dev/os/wolfi-signing.rsa.pub
   
       - name: Generate Trivy Vulnerability Report
         uses: aquasecurity/trivy-action@master
