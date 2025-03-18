@@ -15,9 +15,7 @@ jobs:
       packages: write
       contents: read
       attestations: write
-    env:
-      REGISTRY: ghcr.io
-      IMAGE_NAME: ${{ github.repository }}
+      security-events: write
     
     steps:
       - name: Harden the runner (Audit all outbound calls)
@@ -34,7 +32,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 #v4.2.2
   
-      - uses: distroless/actions/apko-snapshot@0c41b080c7a4d6f7caf510a1c6f67d593f687789 # main
+      - uses: d4rkfella/actions/apko-snapshot@5ad73cba11b46c6e2ba135877ff6f7a4803ade83 # main
         id: apko
         with:
           source-date-epoch: ${{ steps.snapshot-date.outputs.epoch }}
@@ -45,27 +43,12 @@ jobs:
           build-repository-append: https://packages.darkfellanetwork.com
           keyring-append: https://packages.darkfellanetwork.com/melange.rsa.pub
   
-      - name: Generate Trivy Vulnerability Report
-        uses: aquasecurity/trivy-action@6c175e9c4083a92bbca2f9724c8a5e33bc2d97a5 # master
+      - uses: d4rkfella/actions/vul-scans@main
+        id: scans
         with:
-          image-ref: ${{ steps.apko.outputs.digest }}
-          output: trivy-report.json
-          format: json
-          exit-code: 0
-          vuln-type: 'os,library'
-
-      - name: Upload Vulnerability Scan Results
-        uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4.6.1
-        with:
-          name: trivy-report
-          path: trivy-report.json
-          retention-days: 30
-      
-      - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@6c175e9c4083a92bbca2f9724c8a5e33bc2d97a5 # master
-        with:
-          image-ref: ${{ steps.apko.outputs.digest }}
-          format: 'table'
-          exit-code: '1'
-          vuln-type: 'os,library'
-          severity: 'CRITICAL,HIGH'
+          RUN_SNYK: false
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          image: ${{ steps.apko.outputs.digest }}
+          UPLOAD_GITHUB_CODE: true
